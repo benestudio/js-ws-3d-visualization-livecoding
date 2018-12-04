@@ -36,3 +36,9 @@ browser-sync start --server --files *
 
 Base map of Budapest: https://i.imgur.com/E8vbaRC.png
 Noise map of Budapest: https://i.imgur.com/MtBe8P6.png
+
+```
+function f(x) {
+  return Math.max(0, Math.min(1, Math.exp(x * 2) / 2.2 - 1));
+}
+```
