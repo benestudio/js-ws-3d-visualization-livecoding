@@ -33,9 +33,20 @@ class DataVisualizer {
     // array of rows of values
     // const data = generateData(100, 100);
 
+
+    function treshold(value, tresholdValue = 0.2) {
+      return (value < tresholdValue) ? undefined : value;
+    }
+
     const imageData = await getImageData(this.dataMapUrl, 0.1);
+
+    function f(x) {
+      return Math.max(0, Math.min(1, Math.exp(x * 2) / 2.2 - 1));
+    }
+
+
     const data = imageData.map(row => row.map(
-      ([r, g, b, a]) => 1 - r / 255
+      ([r, g, b, a]) => treshold(f(1 - r / 255))
     ));
 
     const dataWidth = data.length;
@@ -49,26 +60,35 @@ class DataVisualizer {
       const row = data[j];
       for (let i = 0; i < row.length; i++) {
         const value = row[i];
-        const cubeGeometry = new THREE.CubeGeometry(1, 1, 1);
-        const cube = new THREE.Mesh(cubeGeometry);
-        cube.applyMatrix(new THREE.Matrix4().makeTranslation(
-          i - dataWidth / 2,
-          0.5,
-          j - dataHeight / 2
-          ));
-        const y = value * this.dataDepth;
-        cube.applyMatrix(new THREE.Matrix4().makeScale(1, y, 1));
-        for (let k = 0; k < cubeGeometry.faces.length; k++) {
-          cubeGeometry.faces[k].materialIndex = Math.round(
-            (1 - value) * (materials.length - 1)
-          );
+        if (value !== undefined){
+          const cubeGeometry = new THREE.CubeGeometry(1, 1, 1);
+          const cube = new THREE.Mesh(cubeGeometry);
+          cube.applyMatrix(new THREE.Matrix4().makeTranslation(
+            i - dataWidth / 2,
+            0.5,
+            j - dataHeight / 2
+            ));
+          const y = value * this.dataDepth;
+          cube.applyMatrix(new THREE.Matrix4().makeScale(1, y, 1));
+          for (let k = 0; k < cubeGeometry.faces.length; k++) {
+            cubeGeometry.faces[k].materialIndex = Math.round(
+              (1 - value) * (materials.length - 1)
+            );
+          }
+          mergedGeometry.merge(cubeGeometry, cube.matrix);
         }
-        mergedGeometry.merge(cubeGeometry, cube.matrix);
       }
     }
 
     const mergedMesh = new THREE.Mesh(mergedGeometry, materials);
 
+    const map = createMap({
+      width: this.width,
+      height: this.height,
+      url: this.baseMapUrl,
+    });
+
+    this.scene.add(map);
     this.scene.add(mergedMesh);
     
     this.control = new THREE.OrbitControls(this.camera, this.renderer.domElement);
@@ -81,8 +101,10 @@ class DataVisualizer {
     for (let i = 0; i < count; i++) {
       const material = new THREE.MeshPhongMaterial();
       const colorComponent = Math.round(i / count * 255);
-      material.color = new THREE.Color(`rgb(255, ${colorComponent}, 0)`);
+      material.color = new THREE.Color(`rgba(255, ${colorComponent}, 0)`);
       materials.push(material);
+      material.transparent = true;
+      material.opacity = .5;
     }
     return materials;
   }
