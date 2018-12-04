@@ -30,20 +30,36 @@ class DataVisualizer {
 
     this.setupLights();
 
+    // array of rows of values
+    const data = generateData(100, 100);
+
+    const dataWidth = data.length;
+    const dataHeight = data[0] ? data[0].length : 0;
+
     const materials = DataVisualizer.createMaterialPalette(10);
 
     const mergedGeometry = new THREE.Geometry();
 
-    for (let j = 0; j < 10; j++) {
-      const cubeGeometry = new THREE.CubeGeometry(1, 1, 1);
-      const cube = new THREE.Mesh(cubeGeometry);
-      cube.applyMatrix(new THREE.Matrix4().makeTranslation(j *5, 0, 0));
-      for (let k = 0; k < cubeGeometry.faces.length; k++) {
-        cubeGeometry.faces[k].materialIndex = j;
+    for (let j = 0; j < data.length; j++) {
+      const row = data[j];
+      for (let i = 0; i < row.length; i++) {
+        const value = row[i];
+        const cubeGeometry = new THREE.CubeGeometry(1, 1, 1);
+        const cube = new THREE.Mesh(cubeGeometry);
+        cube.applyMatrix(new THREE.Matrix4().makeTranslation(
+          i - dataWidth / 2,
+          0.5,
+          j - dataHeight / 2
+          ));
+        const y = value * this.dataDepth;
+        cube.applyMatrix(new THREE.Matrix4().makeScale(1, y, 1));
+        for (let k = 0; k < cubeGeometry.faces.length; k++) {
+          cubeGeometry.faces[k].materialIndex = j % materials.length;
+        }
+        mergedGeometry.merge(cubeGeometry, cube.matrix);
       }
-      mergedGeometry.merge(cubeGeometry, cube.matrix);
     }
-    
+
     const mergedMesh = new THREE.Mesh(mergedGeometry, materials);
 
     this.scene.add(mergedMesh);
