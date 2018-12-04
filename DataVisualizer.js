@@ -30,16 +30,38 @@ class DataVisualizer {
 
     this.setupLights();
 
-    const material = new THREE.MeshPhongMaterial();
+    const materials = DataVisualizer.createMaterialPalette(10);
 
-    const cubeGeometry = new THREE.CubeGeometry(1, 1, 1);
-    const cube = new THREE.Mesh(cubeGeometry, material);
+    const mergedGeometry = new THREE.Geometry();
 
+    for (let j = 0; j < 10; j++) {
+      const cubeGeometry = new THREE.CubeGeometry(1, 1, 1);
+      const cube = new THREE.Mesh(cubeGeometry);
+      cube.applyMatrix(new THREE.Matrix4().makeTranslation(j *5, 0, 0));
+      for (let k = 0; k < cubeGeometry.faces.length; k++) {
+        cubeGeometry.faces[k].materialIndex = j;
+      }
+      mergedGeometry.merge(cubeGeometry, cube.matrix);
+    }
+    
+    const mergedMesh = new THREE.Mesh(mergedGeometry, materials);
+
+    this.scene.add(mergedMesh);
+    
     this.control = new THREE.OrbitControls(this.camera, this.renderer.domElement);
 
-    this.scene.add(cube);
-
     this.animate();
+  }
+
+  static createMaterialPalette(count) {
+    const materials = [];
+    for (let i = 0; i < count; i++) {
+      const material = new THREE.MeshPhongMaterial();
+      const colorComponent = Math.round(i / count * 255);
+      material.color = new THREE.Color(`rgb(255, ${colorComponent}, 0)`);
+      materials.push(material);
+    }
+    return materials;
   }
 
   setupLights() {
