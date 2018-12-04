@@ -13,7 +13,7 @@ class DataVisualizer {
     this.dataDepth = dataDepth;
   }
 
-  init() {
+  async init() {
     this.scene = new THREE.Scene();
 
     // camera
@@ -31,7 +31,12 @@ class DataVisualizer {
     this.setupLights();
 
     // array of rows of values
-    const data = generateData(100, 100);
+    // const data = generateData(100, 100);
+
+    const imageData = await getImageData(this.dataMapUrl, 0.1);
+    const data = imageData.map(row => row.map(
+      ([r, g, b, a]) => 1 - r / 255
+    ));
 
     const dataWidth = data.length;
     const dataHeight = data[0] ? data[0].length : 0;
@@ -54,7 +59,9 @@ class DataVisualizer {
         const y = value * this.dataDepth;
         cube.applyMatrix(new THREE.Matrix4().makeScale(1, y, 1));
         for (let k = 0; k < cubeGeometry.faces.length; k++) {
-          cubeGeometry.faces[k].materialIndex = j % materials.length;
+          cubeGeometry.faces[k].materialIndex = Math.round(
+            (1 - value) * (materials.length - 1)
+          );
         }
         mergedGeometry.merge(cubeGeometry, cube.matrix);
       }
